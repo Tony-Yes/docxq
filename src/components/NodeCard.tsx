@@ -1,7 +1,9 @@
+import { t, useLanguage } from "@/lib/i18n"
 import { memo } from "react"
 
 import type { Node } from "@/lib/api"
-import { bytes, cycle, daysUntil, flagOf, money, osName, percent, rate, sinceSeen, span, uptime } from "@/lib/format"
+import { bytes, cycle, daysUntil, money, osName, percent, rate, sinceSeen, span, uptime } from "@/lib/format"
+import { CountryFlag } from "@/components/CountryFlag"
 import { IconArrowDown, IconArrowUp } from "@/components/icons"
 import { Meter, monthUsage } from "@/components/Summary"
 
@@ -24,8 +26,8 @@ export type NodeCardProps = {
 }
 
 export const NodeCard = memo(function NodeCard({ node, columns, usage, price, remark, onOpen }: NodeCardProps) {
+  useLanguage()
   const m = node.metrics
-  const flag = flagOf(node.country ?? "")
   const left = remaining(node)
   const expired = left !== null && left < 0
   const soon = left !== null && left >= 0 && left <= 7
@@ -34,27 +36,27 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
   const never = node.last_seen_ago === null
 
   const status = node.online
-    ? { text: m ? "在线" : "已连接", cls: "status on" }
-    : { text: never ? "未接入" : `离线 ${span(seen)}`, cls: never ? "status never" : "status" }
+    ? { text: m ? t("在线", "Online") : t("已连接", "Connected"), cls: "status on" }
+    : { text: never ? t("未接入", "Not connected") : `${t("离线", "Offline")} ${span(seen)}`, cls: never ? "status never" : "status" }
 
   return (
     <button
       type="button"
       className="card"
       onClick={() => onOpen(node.id)}
-      aria-label={`${node.name} 详情`}
+      aria-label={`${node.name} ${t("详情", "details")}`}
       data-columns={columns}
     >
       <div className="card-head">
         <div className="card-identity">
           <div className="card-title">
-            {flag ? <span className="flag">{flag}</span> : null}
+            <CountryFlag country={node.country} />
             <h3>{node.name}</h3>
           </div>
           <div className="card-sub">
             {deployed(node)
-              ? [osName(node.os ?? ""), node.cpu_cores > 0 ? `${node.cpu_cores} 核` : "", node.arch ?? ""].filter(Boolean).join(" · ")
-              : "尚未上报硬件信息"}
+              ? [osName(node.os ?? ""), node.cpu_cores > 0 ? `${node.cpu_cores} ${t("核", "cores")}` : "", node.arch ?? ""].filter(Boolean).join(" · ")
+              : t("尚未上报硬件信息", "Hardware not reported yet")}
           </div>
         </div>
         <span className={status.cls}>
@@ -69,11 +71,11 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
       <div className="card-body">
         {m && usage ? (
           <div className="meters">
-            <Meter label="CPU" value={m.cpu} used={`${Math.round(m.cpu)}%`} hint={`负载 ${m.load[0].toFixed(2)}`} />
-            <Meter label="内存" value={percent(m.mem_used, m.mem_total)} used={bytes(m.mem_used)} total={bytes(m.mem_total)} />
-            <Meter label="硬盘" value={percent(m.disk_used, m.disk_total)} used={bytes(m.disk_used)} total={bytes(m.disk_total)} />
+            <Meter label="CPU" value={m.cpu} used={`${Math.round(m.cpu)}%`} hint={`${t("负载", "Load")} ${m.load[0].toFixed(2)}`} />
+            <Meter label={t("内存", "Memory")} value={percent(m.mem_used, m.mem_total)} used={bytes(m.mem_used)} total={bytes(m.mem_total)} />
+            <Meter label={t("硬盘", "Disk")} value={percent(m.disk_used, m.disk_total)} used={bytes(m.disk_used)} total={bytes(m.disk_total)} />
             <Meter
-              label={node.traffic_limit > 0 ? "本月流量" : "交换分区"}
+              label={node.traffic_limit > 0 ? t("本月流量", "Monthly traffic") : t("交换分区", "Swap")}
               value={quota ?? percent(m.swap_used, m.swap_total)}
               used={quota !== null ? bytes(monthUsage(node)) : bytes(m.swap_used)}
               total={quota !== null ? bytes(node.traffic_limit) : bytes(m.swap_total)}
@@ -82,12 +84,12 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
         ) : (
           <p className="card-empty-note">
             {m
-              ? "资源使用情况已在设置中隐藏。"
+              ? t("资源使用情况已在设置中隐藏。", "Resource usage is hidden in settings.")
               : node.online
-                ? "已连上，正在等待第一份指标。"
+                ? t("已连上，正在等待第一份指标。", "Connected; waiting for the first metrics.")
                 : never
-                  ? "这个节点还没有安装 agent 或从未上报过。"
-                  : `上次上报于 ${span(seen)}前。`}
+                  ? t("这个节点还没有安装 agent 或从未上报过。", "The agent is not installed or has never reported.")
+                  : t(`上次上报于 ${span(seen)}前。`, `Last reported ${span(seen)} ago.`)}
           </p>
         )}
       </div>
@@ -100,19 +102,19 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
       <div className="card-foot">
         {m ? (
           <>
-            <span className="io" title="下行">
+            <span className="io" title={t("下行", "Download")}>
               <IconArrowDown />
               {rate(m.net_rx)}
             </span>
-            <span className="io" title="上行">
+            <span className="io" title={t("上行", "Upload")}>
               <IconArrowUp />
               {rate(m.net_tx)}
             </span>
           </>
         ) : (
-          <span className="io">{node.online ? "等待指标" : "无实时数据"}</span>
+          <span className="io">{node.online ? t("等待指标", "Waiting for metrics") : t("无实时数据", "No live data")}</span>
         )}
-        <span className="uptime">{m && node.online && m.uptime ? `已运行 ${uptime(m.uptime)}` : ""}</span>
+        <span className="uptime">{m && node.online && m.uptime ? t(`已运行 ${uptime(m.uptime)}`, `Uptime ${uptime(m.uptime)}`) : ""}</span>
       </div>
 
       {price ? (
@@ -124,10 +126,10 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
               {cycle(node.billing_cycle || "monthly")}
             </span>
           ) : (
-            <span className="amount free">免费</span>
+            <span className="amount free">{t("免费", "Free")}</span>
           )}
           <span className={expired ? "danger" : soon ? "warn" : "muted"}>
-            {left === null ? "无限" : expired ? `已过期 ${-left} 天` : `${left} 天后到期`}
+            {left === null ? t("无限", "Unlimited") : expired ? t(`已过期 ${-left} 天`, `Expired ${-left} days ago`) : t(`${left} 天后到期`, `Expires in ${left} days`)}
           </span>
         </div>
       ) : null}

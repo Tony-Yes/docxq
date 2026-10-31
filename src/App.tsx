@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { getLanguage, setLanguage, useLanguage, t } from "@/lib/i18n"
 
 import { groupsOf, speedHistory, useNodes, type Node } from "@/lib/api"
 import { flag, num, text, type Values } from "@/lib/config"
@@ -71,7 +72,7 @@ function Header({
         {/* The sidebar is the only way to the admin panel, and it is off-canvas on
             a phone: without this button there is no way in at all. */}
         {hasNav ? (
-          <button className="icon-btn nav-toggle" onClick={onMenu} aria-label="打开导航" title="导航">
+          <button className="icon-btn nav-toggle" onClick={onMenu} aria-label={t("打开导航", "Open navigation")} title={t("导航", "Navigation")}>
             <IconMenu />
           </button>
         ) : null}
@@ -80,17 +81,21 @@ function Header({
         <a
           className="brand"
           href="/"
-          title="返回首页"
+          title={t("返回首页", "Back to home")}
           onClick={(e) => {
             e.preventDefault()
             onHome()
           }}
         >
           <span className="brand-text">{site}</span>
-          <span className="brand-tag">状态</span>
+          <span className="brand-tag">{t("状态", "Status")}</span>
         </a>
 
         <div className="header-spacer" />
+
+        <button type="button" className="btn language-toggle" onClick={() => setLanguage(getLanguage() === "en" ? "zh-CN" : "en")} aria-label={t("切换到英文", "Switch to Chinese")} title={t("切换到英文", "Switch to Chinese")}>
+          {getLanguage() === "en" ? "ZH" : "EN"}
+        </button>
 
         <label className="search">
           <IconSearch width={14} height={14} />
@@ -98,20 +103,20 @@ function Header({
             ref={input}
             type="search"
             value={query}
-            placeholder="搜索节点"
-            aria-label="搜索节点"
+            placeholder={t("搜索节点", "Search nodes")}
+            aria-label={t("搜索节点", "Search nodes")}
             onChange={(e) => onQuery(e.target.value)}
           />
           <kbd>⌘K</kbd>
         </label>
 
         {authed ? (
-          <button className="icon-btn" onClick={onSettings} aria-label="主题设置" title="主题设置">
+          <button className="icon-btn" onClick={onSettings} aria-label={t("主题设置", "Theme settings")} title={t("主题设置", "Theme settings")}>
             <IconSettings />
           </button>
         ) : null}
 
-        <button className="icon-btn" onClick={onToggleTheme} aria-label={dark ? "切换到浅色" : "切换到深色"} title={dark ? "浅色" : "深色"}>
+        <button className="icon-btn" onClick={onToggleTheme} aria-label={dark ? t("切换到浅色", "Switch to light mode") : t("切换到深色", "Switch to dark mode")} title={dark ? t("浅色", "Light") : t("深色", "Dark")}>
           {dark ? <IconSun /> : <IconMoon />}
         </button>
       </div>
@@ -156,19 +161,19 @@ function Sidebar({
       <aside className={`sidebar ${open ? "open" : ""}`} id="site-nav">
       <div className="sidebar-head">
         <span>{site}</span>
-        <button className="icon-btn" onClick={onClose} aria-label="关闭导航">
+        <button className="icon-btn" onClick={onClose} aria-label={t("关闭导航", "Close navigation")}>
           <IconClose />
         </button>
       </div>
 
-      <nav aria-label="站点">
-        <p className="nav-title">站点</p>
+      <nav aria-label={t("站点", "Site")}>
+        <p className="nav-title">{t("站点", "Site")}</p>
         <button
           className={`nav-link ${scope.kind === "all" ? "active" : ""}`}
           onClick={() => { onHome(); onScope(ALL); scrollTo({ top: 0 }); onClose() }}
         >
           <IconServer width={13} height={13} />
-          <span className="nav-label">全部节点</span>
+          <span className="nav-label">{t("全部节点", "All nodes")}</span>
           <span className="count">{total}</span>
         </button>
         <button
@@ -176,7 +181,7 @@ function Sidebar({
           onClick={() => { onHome(); onScope(ONLINE); scrollTo({ top: 0 }); onClose() }}
         >
           <span className="dot on" />
-          <span className="nav-label">全部在线</span>
+          <span className="nav-label">{t("全部在线", "All online")}</span>
           <span className="count">{online}</span>
         </button>
         <button
@@ -184,14 +189,14 @@ function Sidebar({
           onClick={() => { onHome(); onScope(OFFLINE); scrollTo({ top: 0 }); onClose() }}
         >
           <span className="dot" />
-          <span className="nav-label">离线</span>
+          <span className="nav-label">{t("离线", "Offline")}</span>
           <span className="count">{total - online}</span>
         </button>
       </nav>
 
       {groups.length > 0 && (
-        <nav aria-label="分组">
-          <p className="nav-title">分组</p>
+        <nav aria-label={t("分组", "Groups")}>
+          <p className="nav-title">{t("分组", "Groups")}</p>
           {groups.map((g) => (
             <button
               key={g}
@@ -206,11 +211,11 @@ function Sidebar({
         </nav>
       )}
 
-      <nav aria-label="节点">
-        <p className="nav-title">节点</p>
+      <nav aria-label={t("节点", "Nodes")}>
+        <p className="nav-title">{t("节点", "Nodes")}</p>
         {nodes.length === 0 ? (
           <span className="nav-link" style={{ cursor: "default" }}>
-            <span className="nav-label">暂无</span>
+            <span className="nav-label">{t("暂无", "None")}</span>
           </span>
         ) : (
           nodes.map((n) => (
@@ -222,20 +227,20 @@ function Sidebar({
         )}
       </nav>
 
-      <nav aria-label="关于">
-        <p className="nav-title">关于</p>
+      <nav aria-label={t("关于", "About")}>
+        <p className="nav-title">{t("关于", "About")}</p>
         <a className="nav-link" href="#about" onClick={onClose}>
           <IconInfo width={13} height={13} />
           <span className="nav-label">{aboutTitle}</span>
         </a>
         <a className="nav-link" href="/admin">
           <IconWrench width={13} height={13} />
-          <span className="nav-label">管理面板</span>
+          <span className="nav-label">{t("管理面板", "Admin panel")}</span>
         </a>
       </nav>
 
       <p className="nav-title" style={{ marginTop: 22, color: "var(--fg-faint)", fontWeight: 400 }}>
-        {site} · {online}/{total} 在线
+        {site} · {online}/{total} {t("在线", "online")}
       </p>
       </aside>
     </>
@@ -263,8 +268,8 @@ function Toc({ items }: { items: { id: string; label: string; sub?: boolean }[] 
 
   if (!items.length) return null
   return (
-    <aside className="toc" aria-label="本页内容">
-      <p className="nav-title">本页内容</p>
+    <aside className="toc" aria-label={t("本页内容", "On this page")}>
+      <p className="nav-title">{t("本页内容", "On this page")}</p>
       {items.map((item) => (
         <a
           key={item.id}
@@ -341,14 +346,14 @@ function Home({
   }, [visible, scope])
 
   // The sparkline follows a group; the virtual scopes have no series of their
-  // own, and the fleet's line under "离线" would describe the wrong set.
+  // own, and the fleet's line under t("离线", "Offline") would describe the wrong set.
   const speed =
     scope.kind === "group" ? speedHistory.get(scope.name) ?? [] : scope.kind === "all" ? speedHistory.get(null) ?? [] : []
   const scopedNodes = scope.kind === "all" ? nodes : nodes.filter((n) => inScope(n, scope))
   // While a search narrows the list, the overview has to describe the same set:
   // seven of nine online above two rows of cards reads like a bug.
   const summaryNodes = query ? visible : scopedNodes
-  const summaryScope = query ? "搜索结果" : scopeLabel(scope)
+  const summaryScope = query ? t("搜索结果", "Search results") : scopeLabel(scope)
 
   if (!visible.length) {
     return (
@@ -356,14 +361,14 @@ function Home({
         {showSummary ? <Summary nodes={summaryNodes} scope={summaryScope} speed={speed} currency={currency} fx={fx} /> : null}
         <div className="empty-state" style={{ marginTop: 24 }}>
           {query
-            ? `没有匹配「${query}」的节点。`
+            ? t(`没有匹配「${query}」的节点。`, `No nodes match “${query}”.`)
             : scope.kind === "all"
-              ? "站点还没有添加任何节点。"
+              ? t("站点还没有添加任何节点。", "No nodes have been added yet.")
               : scope.kind === "group"
-                ? `「${scope.name}」分组下还没有节点。`
+                ? t(`「${scope.name}」分组下还没有节点。`, `No nodes in “${scope.name}”.`)
                 : scope.kind === "online"
-                  ? "现在没有节点在线。"
-                  : "所有节点都在线。"}
+                  ? t("现在没有节点在线。", "No nodes are currently online.")
+                  : t("所有节点都在线。", "All nodes are online.")}
         </div>
       </>
     )
@@ -376,9 +381,9 @@ function Home({
           further down the page. */}
       <section className="section" id="overview" style={{ marginTop: 0 }}>
         <h2 className="section-title">
-          {showSummary ? "概览" : "节点"}
+          {showSummary ? t("概览", "Overview") : t("节点", "Nodes")}
           <span className="hint">
-            {visible.length} 台 · {summaryScope} · 最近 {historyDays} 天有历史
+            {visible.length} {t("台", "nodes")} · {summaryScope} · {t(`最近 ${historyDays} 天有历史`, `${historyDays} days of history`)}
           </span>
         </h2>
         {showSummary ? <Summary nodes={summaryNodes} scope={summaryScope} speed={speed} currency={currency} fx={fx} /> : null}
@@ -387,16 +392,16 @@ function Home({
             <div key={section.name || `s-${i}`} id={section.name ? `g-${i}` : undefined} style={{ scrollMarginTop: 80 }}>
               {sections.length > 1 && !panel ? (
                 <div className="group-head">
-                  <h3>{section.name || "未分组"}</h3>
+                  <h3>{section.name || t("未分组", "Ungrouped")}</h3>
                   <span>
-                    {section.nodes.filter((n) => n.online).length} / {section.nodes.length} 在线
+                    {section.nodes.filter((n) => n.online).length} / {section.nodes.length} {t("在线", "online")}
                   </span>
                 </div>
               ) : null}
               {panel ? (
                 <Panel
                   nodes={section.nodes}
-                  title={sections.length > 1 ? section.name || "未分组" : scope.kind === "all" ? "" : scopeLabel(scope)}
+                  title={sections.length > 1 ? section.name || t("未分组", "Ungrouped") : scope.kind === "all" ? "" : scopeLabel(scope)}
                   usage={showUsage}
                   price={showPrice}
                   remark={showRemark}
@@ -428,6 +433,7 @@ function Home({
 /* ------------------------------------------------------------------ 应用 */
 
 export function App() {
+  const language = useLanguage()
   const { nodes, error, closed } = useNodes()
   const { me } = useMe()
   const config = useConfig()
@@ -450,11 +456,16 @@ export function App() {
   }, [accent])
 
   const list = nodes ?? []
-  const site = me?.site_name || "状态页"
+  const site = me?.site_name || t("状态页", "Status page")
   const currency = text(values ?? {}, "currency", "CNY") || "CNY"
   const { table: fx } = useFx(text(values ?? {}, "fx_rates", ""))
   const quote = useQuote(text(values ?? {}, "quote", ""), text(values ?? {}, "quote_api", ""))
-  const aboutTitle = text(values ?? {}, "about_title", "").trim() || "关于本站"
+  const configuredAboutTitle = text(values ?? {}, "about_title", "").trim()
+  // loadConfig merges manifest defaults, so the default Chinese title is not
+  // empty after loading. Treat it as built-in copy, not a custom site title.
+  const aboutTitle = !configuredAboutTitle || configuredAboutTitle === "关于本站"
+    ? t("关于本站", "About this site")
+    : configuredAboutTitle
   const about = text(values ?? {}, "about", "").trim()
   // The tab title follows the site name, and on a detail page names the node:
   // with several status tabs open that is the only way to tell them apart.
@@ -477,7 +488,7 @@ export function App() {
   }, [nav])
 
   const historyDays = me?.history_days ?? 7
-  const ranges = useMemo(() => windows(historyDays), [historyDays])
+  const ranges = useMemo(() => windows(historyDays), [historyDays, language])
 
   // A window the hub no longer keeps (history_days shrank) falls back to the
   // shortest one rather than an empty chart.
@@ -516,13 +527,13 @@ export function App() {
     if (error && !list.length) return []
     if (route !== null) {
       return [
-        { id: "summary", label: "概况" },
-        { id: "charts", label: "监控图表" },
+        { id: "summary", label: t("概况", "Summary") },
+        { id: "charts", label: t("监控图表", "Monitoring charts") },
       ]
     }
     // The tiles and the cards share one section, so one entry leads to both.
     const items: { id: string; label: string; sub?: boolean }[] = []
-    if (list.length) items.push({ id: "overview", label: flag(values ?? {}, "show_summary", true) ? "概览" : "节点" })
+    if (list.length) items.push({ id: "overview", label: flag(values ?? {}, "show_summary", true) ? t("概览", "Overview") : t("节点", "Nodes") })
     // Group headings only exist when the page draws more than one of them, and
     // a group tab or a search leaves exactly one.
     if (list.length && scope.kind === "all" && groups.length > 1) {
@@ -530,7 +541,7 @@ export function App() {
     }
     if (list.length) items.push({ id: "about", label: aboutTitle })
     return items
-  }, [route, groups, values, error, list.length, aboutTitle, scope])
+  }, [route, groups, values, error, list.length, aboutTitle, scope, language])
 
   const loading = nodes === null && !error && !closed
 
@@ -583,14 +594,14 @@ export function App() {
           {closed && list.length ? (
             <div className="alert danger">
               <IconAlert />
-              <span>这个站点的状态页已关闭，需要登录后才能查看。下面是关闭前拿到的数据。</span>
+              <span>{t("这个站点的状态页已关闭，需要登录后才能查看。下面是关闭前拿到的数据。", "This page requires sign-in. Showing the last available data.")}</span>
             </div>
           ) : null}
 
           {error && list.length ? (
             <div className="alert danger">
               <IconAlert />
-              <span>{error}（显示的是最后一次拿到的数据）</span>
+              <span>{error}{t("（显示的是最后一次拿到的数据）", " (showing last available data)")}</span>
             </div>
           ) : null}
 
@@ -613,10 +624,10 @@ export function App() {
               <div className="doc-head">
                 <div className="crumb">
                   <a href="/" onClick={(e) => { e.preventDefault(); go(null); setScope(ALL) }}>
-                    首页
+                    {t("首页", "Home")}
                   </a>
                   <span className="sep">/</span>
-                  <span>状态</span>
+                  <span>{t("状态", "Status")}</span>
                   {scope.kind !== "all" ? (
                     <>
                       <span className="sep">/</span>
@@ -627,9 +638,9 @@ export function App() {
                 <h1 className="doc-title">{scope.kind === "all" ? site : scopeLabel(scope)}</h1>
                 <p className="doc-lead">
                   {query.trim() ? (
-                    `匹配「${query.trim()}」的节点 ${matched.length} 台，${matched.filter((n) => n.online).length} 台在线。`
+                    t(`匹配「${query.trim()}」的节点 ${matched.length} 台，${matched.filter((n) => n.online).length} 台在线。`, `${matched.length} nodes match “${query.trim()}”, ${matched.filter((n) => n.online).length} online.`)
                   ) : scope.kind === "group" ? (
-                    `${scope.name} 分组下的节点状态、资源占用与流量。点击任意卡片查看历史曲线。`
+                    t(`${scope.name} 分组下的节点状态、资源占用与流量。点击任意卡片查看历史曲线。`, `Status, resources and traffic in ${scope.name}. Select a node to view history.`)
                   ) : quote ? (
                     /* The same line on every scope the sidebar offers, so switching
                        between 全部节点 / 全部在线 / 离线 does not make the page
@@ -639,7 +650,7 @@ export function App() {
                       {quote.author ? <cite>—— {quote.author}</cite> : null}
                     </>
                   ) : (
-                    `共 ${matched.length} 台节点，${matched.filter((n) => n.online).length} 台在线。`
+                    t(`共 ${matched.length} 台节点，${matched.filter((n) => n.online).length} 台在线。`, `${matched.length} nodes, ${matched.filter((n) => n.online).length} online.`)
                   )}
                 </p>
               </div>
@@ -662,11 +673,10 @@ export function App() {
                 ) : (
                   <div className="prose">
                     <p>
-                      这个页面由 <code>monitor</code> 的 Doc 主题渲染，只使用公开接口读取节点状态，不会写入任何数据。
+                      {t("这个页面由 monitor 的 Doc 主题渲染，只使用公开接口读取节点状态，不会写入任何数据。", "This page uses the Doc theme for monitor. It reads public node data without modifying it.")}
                     </p>
                     <p>
-                      状态每两秒通过 WebSocket 推送；连接不可用时退回每五秒轮询一次。历史曲线由 hub 按分钟或小时聚合，
-                      当前站点保留 {historyDays} 天。
+                      {t(`状态每两秒通过 WebSocket 推送；连接不可用时退回每五秒轮询一次。历史曲线由 hub 按分钟或小时聚合，当前站点保留 ${historyDays} 天。`, `Status updates arrive every two seconds over WebSocket, with five-second polling as a fallback. History is aggregated by minute or hour and retained for ${historyDays} days.`)}
                     </p>
                   </div>
                 )}
@@ -688,9 +698,9 @@ export function App() {
           {footer ? <span className="footer-note">{footer}</span> : null}
           <span className="footer-spacer" />
           {list.length > 0 ? (
-            <span>最后更新 {new Date().toLocaleTimeString("zh-CN")}</span>
+            <span>{t("最后更新", "Last updated")} {new Date().toLocaleTimeString(getLanguage())}</span>
           ) : null}
-          <span>数据来自 monitor</span>
+          <span>{t("数据来自 monitor", "Powered by monitor")}</span>
         </div>
       </footer>
 
@@ -715,19 +725,18 @@ function Closed() {
   return (
     <div className="doc-head">
       <div className="crumb">
-        <span>状态</span>
+        <span>{t("状态", "Status")}</span>
       </div>
-      <h1 className="doc-title">这个状态页已关闭</h1>
-      <p className="doc-lead">站点管理员把状态页设成了仅登录可见。</p>
+      <h1 className="doc-title">{t("这个状态页已关闭", "This status page is private")}</h1>
+      <p className="doc-lead">{t("站点管理员把状态页设成了仅登录可见。", "The administrator has restricted this page to signed-in users.")}</p>
       <div className="prose" style={{ marginTop: 20 }}>
         <p>
-          登录本站后就能看到节点列表；没有账号的话，可以联系站长。左侧导航里的「管理面板」是登录的地方，
-          手机上先点页头的菜单按钮。
+          {t("登录本站后就能看到节点列表；没有账号的话，可以联系站长。左侧导航里的「管理面板」是登录的地方，手机上先点页头的菜单按钮。", "Sign in through Admin panel in the sidebar to view nodes. On mobile, open the header menu first. Contact the administrator if you need an account.")}
         </p>
       </div>
       <p style={{ marginTop: 18 }}>
         <a className="btn primary" href="/admin">
-          去登录
+          {t("去登录", "Sign in")}
         </a>
       </p>
     </div>
@@ -738,14 +747,14 @@ function Failed({ message }: { message: string }) {
   return (
     <div className="doc-head">
       <div className="crumb">
-        <span>状态</span>
+        <span>{t("状态", "Status")}</span>
       </div>
-      <h1 className="doc-title">读不到节点列表</h1>
+      <h1 className="doc-title">{t("读不到节点列表", "Unable to load nodes")}</h1>
       <p className="doc-lead">{message}</p>
       <div className="alert danger" style={{ marginTop: 20 }}>
         <IconAlert />
         <span>
-          页面会每五秒自动重试一次。如果一直是这样，可能是 hub 暂时不可用，或者这个状态页需要登录后才能查看。
+          {t("页面会每五秒自动重试一次。如果一直是这样，可能是 hub 暂时不可用，或者这个状态页需要登录后才能查看。", "Retrying every five seconds. The hub may be unavailable or this page may require sign-in.")}
         </span>
       </div>
     </div>

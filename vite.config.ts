@@ -13,6 +13,8 @@ export default defineConfig({
   // A theme reads public data only, so any hub with its status page open can
   // serve as the source: MONITOR_HUB=https://hub.example.com npm run dev.
   server: {
+    // Editors may briefly truncate a file before writing its new contents.
+    watch: { awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 50 } },
     proxy: { "/api": { target: process.env.MONITOR_HUB || "http://127.0.0.1:9911", changeOrigin: true, ws: true } },
   },
 })

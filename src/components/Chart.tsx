@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 
 /**
@@ -216,7 +217,7 @@ export function Chart(props: ChartProps) {
               <div className="tt-row" key={i} style={{ color: line.color }}>
                 <i />
                 <span>{line.label}</span>
-                <b>{v === null || v === undefined || !Number.isFinite(v) ? "无数据" : (formatTip ?? formatY)(v)}</b>
+                <b>{v === null || v === undefined || !Number.isFinite(v) ? t("无数据", "No data") : (formatTip ?? formatY)(v)}</b>
               </div>
             )
           })}

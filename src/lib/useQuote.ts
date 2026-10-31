@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { getLanguage } from "@/lib/i18n"
 
 import { dayNumber, parseQuote, quoteOfTheDay, type Quote } from "@/lib/quote"
 
@@ -32,7 +33,9 @@ function readCache(): Cached | null {
 }
 
 export function useQuote(spec: string, api: string): Quote | null {
-  const local = quoteOfTheDay(spec)
+  const local = !spec.trim() && getLanguage() === "en"
+    ? { text: "Simplicity is the ultimate sophistication.", author: "" }
+    : quoteOfTheDay(spec)
   const url = api.trim()
 
   const [remote, setRemote] = useState<Quote | null>(() => {

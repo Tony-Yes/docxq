@@ -1,6 +1,8 @@
+import { t } from "@/lib/i18n"
 import { useEffect, useMemo, useState } from "react"
 
 import { api, type Node } from "@/lib/api"
+import { CountryFlag } from "@/components/CountryFlag"
 import {
   axisBytes,
   axisTop,
@@ -10,7 +12,6 @@ import {
   date,
   daysUntil,
   despike,
-  flagOf,
   FOREVER,
   money,
   osName,
@@ -166,52 +167,51 @@ export function NodeDetail({ node, hours, windows, onHours, onBack }: DetailProp
       <>
         <div className="doc-head">
           <div className="crumb">
-            <a href="/" onClick={(e) => { e.preventDefault(); onBack() }}>首页</a>
+            <a href="/" onClick={(e) => { e.preventDefault(); onBack() }}>{t("首页", "Home")}</a>
             <span className="sep">/</span>
-            <span>节点</span>
+            <span>{t("节点", "Nodes")}</span>
           </div>
-          <h1 className="doc-title">找不到这个节点</h1>
+          <h1 className="doc-title">{t("找不到这个节点", "Node not found")}</h1>
         </div>
-        <div className="empty-state">它可能已被删除，或者不属于这个站点。</div>
+        <div className="empty-state">{t("它可能已被删除，或者不属于这个站点。", "It may have been removed or does not belong to this site.")}</div>
       </>
     )
   }
 
   const m = node.metrics
   const left = node.expires_in !== undefined ? node.expires_in : daysUntil(node.expires_at)
-  const flag = flagOf(node.country ?? "")
 
   return (
     <>
       <div className="back-bar">
         <button type="button" className="back-btn" onClick={onBack}>
           <IconChevronLeft width={15} height={15} />
-          返回节点列表
+          {t("返回节点列表", "Back to nodes")}
         </button>
       </div>
 
       <div className="doc-head">
         <div className="crumb">
           <a href="/" onClick={(e) => { e.preventDefault(); onBack() }}>
-            首页
+            {t("首页", "Home")}
           </a>
           <span className="sep">/</span>
-          <span>节点</span>
+          <span>{t("节点", "Nodes")}</span>
           <span className="sep">/</span>
           <span>{node.name}</span>
         </div>
         <h1 className="doc-title">
-          {flag ? <span style={{ marginRight: 8 }}>{flag}</span> : null}
+          <CountryFlag country={node.country} />
           {node.name}
         </h1>
         <p className="doc-lead">
           {node.online
             ? m
-              ? `在线，已运行 ${uptime(m.uptime)}。`
-              : "已连接，正在等待第一份指标。"
+              ? t(`在线，已运行 ${uptime(m.uptime)}。`, `Online, uptime ${uptime(m.uptime)}.`)
+              : t("已连接，正在等待第一份指标。", "Connected; waiting for the first metrics.")
             : node.last_seen_ago === null
-              ? "这个节点还没有安装 agent，或从未上报过。"
-              : `离线，上次上报于 ${span(sinceSeen(node))}前。`}
+              ? t("这个节点还没有安装 agent，或从未上报过。", "The agent is not installed or has never reported.")
+              : t(`离线，上次上报于 ${span(sinceSeen(node))}前。`, `Offline, last reported ${span(sinceSeen(node))} ago.`)}
         </p>
       </div>
 
@@ -219,40 +219,40 @@ export function NodeDetail({ node, hours, windows, onHours, onBack }: DetailProp
 
       <section className="section" id="charts">
         <div className="toolbar">
-          <div className="tabs" role="group" aria-label="指标类型">
+          <div className="tabs" role="group" aria-label={t("指标类型", "Metric type")}>
             <button className="tab" aria-pressed={tab === "resources"} onClick={() => setTab("resources")}>
-              资源
+              {t("资源", "Resources")}
             </button>
             <button className="tab" aria-pressed={tab === "latency"} onClick={() => setTab("latency")}>
-              网络延迟
+              {t("网络延迟", "Network latency")}
             </button>
           </div>
           <div className="right">
             {tab === "latency" ? (
-              <div className="aids" role="group" aria-label="曲线处理">
+              <div className="aids" role="group" aria-label={t("曲线处理", "Chart processing")}>
                 <button
                   type="button"
                   className="tab tab-icon"
                   aria-pressed={avg}
                   onClick={() => setAvg((on) => !on)}
-                  title="用相邻几次探测的平均值画线，抹掉抖动，整条曲线都会变平缓"
+                  title={t("用相邻几次探测的平均值画线，抹掉抖动，整条曲线都会变平缓", "Average nearby samples to smooth fluctuations across the curve")}
                 >
                   <IconSmooth width={13} height={13} />
-                  平滑
+                  {t("平滑", "Smooth")}
                 </button>
                 <button
                   type="button"
                   className="tab tab-icon"
                   aria-pressed={spike}
                   onClick={() => setSpike((on) => !on)}
-                  title="只把孤立的尖峰换成邻近点的中位数，其余读数原样保留"
+                  title={t("只把孤立的尖峰换成邻近点的中位数，其余读数原样保留", "Replace isolated spikes with the local median; keep other readings unchanged")}
                 >
                   <IconFilter width={13} height={13} />
-                  削峰
+                  {t("削峰", "Remove spikes")}
                 </button>
               </div>
             ) : null}
-            <div className="tabs" role="group" aria-label="时间范围">
+            <div className="tabs" role="group" aria-label={t("时间范围", "Time range")}>
               {windows.map((w) => (
                 <button key={w.hours} className="tab" aria-pressed={hours === w.hours} onClick={() => onHours(w.hours)}>
                   {w.label}
@@ -286,32 +286,35 @@ function Facts({ node, left }: { node: Node; left: number | null }) {
   const m = node.metrics
   const facts: { label: string; value: string; mono?: boolean }[] = []
 
-  if (node.os) facts.push({ label: "操作系统", value: osName(node.os) })
-  if (node.cpu_name) facts.push({ label: "处理器", value: node.cpu_name })
-  if (node.cpu_cores) facts.push({ label: "核心数", value: `${node.cpu_cores} 核` })
-  if (node.arch) facts.push({ label: "架构", value: node.arch })
-  if (node.kernel) facts.push({ label: "内核", value: node.kernel, mono: true })
-  if (node.virt) facts.push({ label: "虚拟化", value: node.virt })
-  if (node.group) facts.push({ label: "分组", value: node.group })
+  if (node.os) facts.push({ label: t("操作系统", "Operating system"), value: osName(node.os) })
+  if (node.cpu_name) facts.push({ label: t("处理器", "Processor"), value: node.cpu_name })
+  if (node.cpu_cores) facts.push({ label: t("核心数", "CPU cores"), value: `${node.cpu_cores} ${t("核", "cores")}` })
+  if (node.arch) facts.push({ label: t("架构", "Architecture"), value: node.arch })
+  if (node.kernel) facts.push({ label: t("内核", "Kernel"), value: node.kernel, mono: true })
+  if (node.virt) facts.push({ label: t("虚拟化", "Virtualization"), value: node.virt })
+  if (node.group) facts.push({ label: t("分组", "Groups"), value: node.group })
   if (node.agent_version) facts.push({ label: "agent", value: node.agent_version, mono: true })
-  if (m) facts.push({ label: "内存", value: pair(m.mem_used, m.mem_total) })
-  if (m) facts.push({ label: "硬盘", value: pair(m.disk_used, m.disk_total) })
-  if (m && m.swap_total > 0) facts.push({ label: "交换分区", value: pair(m.swap_used, m.swap_total) })
-  if (m) facts.push({ label: "连接数", value: `TCP ${m.tcp} · UDP ${m.udp} · 进程 ${m.procs}` })
+  if (m) facts.push({ label: t("内存", "Memory"), value: pair(m.mem_used, m.mem_total) })
+  if (m) facts.push({ label: t("硬盘", "Disk"), value: pair(m.disk_used, m.disk_total) })
+  if (m && m.swap_total > 0) facts.push({ label: t("交换分区", "Swap"), value: pair(m.swap_used, m.swap_total) })
+  if (m) facts.push({ label: t("连接数", "Connections"), value: `TCP ${m.tcp} · UDP ${m.udp}` })
+  if (m) facts.push({ label: t("进程数", "Processes"), value: String(m.procs) })
   if (node.price > 0) {
-    facts.push({ label: "价格", value: `${money(node.price, node.currency || "CNY")} / ${cycle(node.billing_cycle || "monthly")}` })
+    facts.push({ label: t("价格", "Price"), value: `${money(node.price, node.currency || "CNY")} / ${cycle(node.billing_cycle || "monthly")}` })
   } else {
-    facts.push({ label: "价格", value: "免费" })
+    facts.push({ label: t("价格", "Price"), value: t("免费", "Free") })
   }
   if (node.expires_at) {
     facts.push({
-      label: "到期",
-      value: `${date(node.expires_at)}${left === null ? "" : left < 0 ? `（已过期 ${-left} 天）` : `（还有 ${left} 天）`}`,
+      label: t("到期", "Expires"),
+      value: `${date(node.expires_at)}${left === null ? "" : left < 0 ? t(`（已过期 ${-left} 天）`, ` (expired ${-left} days ago)`) : t(`（还有 ${left} 天）`, ` (${left} days left)`)}`,
     })
   } else if (left === null) {
-    facts.push({ label: "到期", value: FOREVER })
+    facts.push({ label: t("到期", "Expires"), value: t(FOREVER, "Unlimited") })
   }
-  if (node.traffic_limit > 0) facts.push({ label: "流量上限", value: bytes(node.traffic_limit) })
+  if (node.traffic_limit > 0) facts.push({ label: t("流量上限", "Traffic limit"), value: bytes(node.traffic_limit) })
+  facts.push({ label: t("本月流量", "Monthly traffic"), value: bytes((node.month_rx ?? 0) + (node.month_tx ?? 0)) })
+  facts.push({ label: t("累计流量", "Total traffic"), value: bytes((node.total_rx ?? 0) + (node.total_tx ?? 0)) })
 
   if (!facts.length) return null
   return (
@@ -352,7 +355,7 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
 
   if (error) return <div className="alert danger">{error}</div>
   if (loading && !data) return <Skeleton />
-  if (!rows.length) return <div className="empty-state">这段时间没有历史数据。可能是 hub 尚未积累，或节点一直离线。</div>
+  if (!rows.length) return <div className="empty-state">{t("这段时间没有历史数据。可能是 hub 尚未积累，或节点一直离线。", "No history for this period. The hub may not have collected data yet or the node was offline.")}</div>
 
   const total = m?.mem_total ?? node.mem_total
   const disk = m?.disk_total ?? node.disk_total
@@ -367,11 +370,11 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
   const charts: { key: string; title: string; series: ChartSeries[]; domain: [number, number]; yticks: number[]; fmt: (v: number) => string }[] = [
     {
       key: "cpu",
-      title: "CPU 使用率",
+      title: t("CPU 使用率", "CPU usage"),
       series: [
-        { label: "平均", color: "var(--accent)", points: gaps.map((r) => num((r as Row).cpu)), area: true },
+        { label: t("平均", "Average"), color: "var(--accent)", points: gaps.map((r) => num((r as Row).cpu)), area: true },
         ...(hasPeak
-          ? [{ label: "峰值", color: "var(--fg-faint)", points: gaps.map((r) => num((r as Row).cpu_max)), dash: true }]
+          ? [{ label: t("峰值", "Peak"), color: "var(--fg-faint)", points: gaps.map((r) => num((r as Row).cpu_max)), dash: true }]
           : []),
       ],
       domain: [0, cpuTop],
@@ -383,8 +386,8 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
   if (total > 0) {
     charts.push({
       key: "mem",
-      title: "内存使用率",
-      series: [{ label: "已用", color: "var(--accent)", points: gaps.map((r) => share((r as Row).mem_used, total)), area: true }],
+      title: t("内存使用率", "Memory usage"),
+      series: [{ label: t("已用", "Used"), color: "var(--accent)", points: gaps.map((r) => share((r as Row).mem_used, total)), area: true }],
       domain: [0, 100],
       yticks: quarters(100),
       fmt: (v) => `${Math.round(v)}%`,
@@ -394,8 +397,8 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
   if (disk > 0) {
     charts.push({
       key: "disk",
-      title: "硬盘使用率",
-      series: [{ label: "已用", color: "var(--accent)", points: gaps.map((r) => share((r as Row).disk_used, disk)), area: true }],
+      title: t("硬盘使用率", "Disk usage"),
+      series: [{ label: t("已用", "Used"), color: "var(--accent)", points: gaps.map((r) => share((r as Row).disk_used, disk)), area: true }],
       domain: [0, 100],
       yticks: quarters(100),
       fmt: (v) => `${Math.round(v)}%`,
@@ -406,10 +409,10 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
   const net = rateAxis(RATE_FLOOR, netPeak)
   charts.push({
     key: "net",
-    title: "网络速率",
+    title: t("网络速率", "Network speed"),
     series: [
-      { label: "下行", color: "var(--accent)", points: gaps.map((r) => num((r as Row).net_rx)) },
-      { label: "上行", color: "#e08a3c", points: gaps.map((r) => num((r as Row).net_tx)) },
+      { label: t("下行", "Download"), color: "var(--accent)", points: gaps.map((r) => num((r as Row).net_rx)) },
+      { label: t("上行", "Upload"), color: "#e08a3c", points: gaps.map((r) => num((r as Row).net_tx)) },
     ],
     domain: net.domain,
     yticks: net.ticks,
@@ -442,7 +445,7 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
             formatTip={c.key === "net" ? rate : c.fmt}
             tipTime={tipTime}
             log={c.key === "net"}
-            empty="没有数据"
+            empty={t("没有数据", "No data")}
           />
         </div>
       ))}
@@ -489,7 +492,7 @@ function LatencyCharts({
 
   if (error) return <div className="alert danger">{error}</div>
   if (loading && !data) return <Skeleton />
-  if (!ids.length) return <div className="empty-state">这段时间没有延迟记录。延迟监控需要在面板里配置探测任务。</div>
+  if (!ids.length) return <div className="empty-state">{t("这段时间没有延迟记录。延迟监控需要在面板里配置探测任务。", "No latency history for this period. Configure probe tasks in the admin panel.")}</div>
 
   // Despiking runs before smoothing: a spike removed from a raw series leaves
   // its neighbours untouched, whereas averaging first would spread the spike
@@ -523,9 +526,9 @@ function LatencyCharts({
     <>
       <div className="chart-card">
         <div className="chart-head">
-          <h4>延迟</h4>
+          <h4>{t("延迟", "Latency")}</h4>
           <div className="legend">
-            <span>毫秒，越低越好{spike ? " · 已削峰" : ""}{avg ? " · 已平滑" : ""}</span>
+            <span>毫秒，越低越好{spike ? t(" · 已削峰", " · Spikes removed") : ""}{avg ? t(" · 已平滑", " · Smoothed") : ""}</span>
           </div>
         </div>
         <Chart
@@ -539,7 +542,7 @@ function LatencyCharts({
           formatTip={(v) => `${v.toFixed(1)} ms`}
           formatX={formatX}
           tipTime={tipTime}
-          empty="没有延迟数据"
+          empty={t("没有延迟数据", "No latency data")}
         />
       </div>
 
@@ -552,11 +555,11 @@ function LatencyCharts({
           const loss = raw === null ? 0 : Math.min(100, Math.max(0, raw))
           const on = !hidden.has(id)
           return (
-            <button key={id} className="probe" aria-pressed={on} onClick={() => toggle(id)} title={on ? "点击隐藏" : "点击显示"}>
+            <button key={id} className="probe" aria-pressed={on} onClick={() => toggle(id)} title={on ? t("点击隐藏", "Click to hide") : t("点击显示", "Click to show")}>
               <i style={{ background: PALETTE[ids.indexOf(id) % PALETTE.length], opacity: on ? 1 : 0.3 }} />
               {history.probes[id] || id}
               {loss > 0 ? (
-                <span className="loss">丢包 {loss < 1 ? "<1" : Math.round(loss)}%</span>
+                <span className="loss">{t("丢包", "Loss")} {loss < 1 ? "<1" : Math.round(loss)}%</span>
               ) : null}
             </button>
           )

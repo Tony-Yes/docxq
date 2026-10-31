@@ -1,3 +1,5 @@
+import { getLanguage, t } from "@/lib/i18n"
+
 const UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
 const unitOf = (n: number) => Math.min(Math.floor(Math.log(n) / Math.log(1024)), UNITS.length - 1)
@@ -34,6 +36,7 @@ export function uptime(seconds: number): string {
   const d = Math.floor(seconds / 86400)
   const h = Math.floor((seconds % 86400) / 3600)
   const m = Math.floor((seconds % 3600) / 60)
+  if (getLanguage() === "en") return d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`
   return d > 0 ? `${d} 天 ${h} 小时` : h > 0 ? `${h} 小时 ${m} 分` : `${m} 分`
 }
 
@@ -72,6 +75,11 @@ const CYCLE_WORDS: Record<number, string> = { 1: "月付", 3: "季付", 6: "半�
 
 /** How a billing cycle reads: 月付, 5 年付, 18 个月付, 一次性. */
 export function cycle(billing: string): string {
+  if (getLanguage() === "en") {
+    if (billing === "once") return "One-time"
+    const months = NAMED_CYCLES[billing] ?? Number(/^(\d+)m$/.exec(billing)?.[1])
+    return months ? (months % 12 ? `${months} mo` : `${months / 12} yr`) : billing
+  }
   if (billing === "once") return "一次性"
   const months = NAMED_CYCLES[billing] ?? Number(/^(\d+)m$/.exec(billing)?.[1])
   if (!months) return billing
@@ -92,7 +100,7 @@ export function windows(days: number): { hours: number; label: string }[] {
   const whole = Math.max(1, Math.floor(days)) * 24
   return [...WINDOWS.filter((h) => h * 1.25 <= whole), whole].map((hours) => ({
     hours,
-    label: hours < 24 ? `${hours} 小时` : hours === 8760 ? "1 年" : `${hours / 24} 天`,
+    label: hours < 24 ? t(`${hours} 小时`, `${hours}h`) : hours === 8760 ? t("1 年", "1 yr") : t(`${hours / 24} 天`, `${hours / 24}d`),
   }))
 }
 
@@ -125,6 +133,7 @@ export function span(seconds: number): string {
   const d = Math.floor(seconds / 86400)
   const h = Math.floor((seconds % 86400) / 3600)
   const m = Math.floor((seconds % 3600) / 60)
+  if (getLanguage() === "en") return d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m` : `${Math.floor(seconds)}s`
   if (d > 0) return h > 0 ? `${d} 天 ${h} 小时` : `${d} 天`
   if (h > 0) return m > 0 ? `${h} 小时 ${m} 分` : `${h} 小时`
   if (m > 0) return `${m} 分`

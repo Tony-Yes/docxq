@@ -1,14 +1,14 @@
+import { t } from "@/lib/i18n"
 import { useMemo } from "react"
 
 import type { Node } from "@/lib/api"
-import { bytes, money, percent, rate } from "@/lib/format"
-import { rateNote, type Table } from "@/lib/fx"
-import { remainingValue } from "@/lib/value"
+import { bytes, rate } from "@/lib/format"
+import type { Table } from "@/lib/fx"
 import { Sparkline } from "@/components/Chart"
-import { IconActivity, IconArrows, IconClock, IconGauge, IconServer, IconTag, IconWallet } from "@/components/icons"
+import { IconActivity, IconArrowDown, IconArrowUp, IconArrows, IconGauge, IconServer } from "@/components/icons"
 
 /**
- * The eight tiles above the list. They describe whatever the page is currently
+ * The five tiles above the list. They describe whatever the page is currently
  * showing -- the whole fleet, or the group whose tab is selected -- because a
  * visitor who narrowed the list expects the numbers to narrow with it.
  */
@@ -38,33 +38,25 @@ export type SummaryProps = {
   fx: Table | null
 }
 
-export function Summary({ nodes, scope, speed, currency, fx }: SummaryProps) {
+export function Summary({ nodes, speed }: SummaryProps) {
   const stats = useMemo(() => {
     let online = 0
     let rx = 0
     let tx = 0
     let dayRx = 0
     let dayTx = 0
-    let memUsed = 0
-    let memTotal = 0
-    let cpuSum = 0
-    let cpuCount = 0
     let month = 0
-    let quota = 0
+    let total = 0
     for (const n of nodes) {
       if (n.online) online++
       if (n.online && n.metrics) {
         rx += n.metrics.net_rx
         tx += n.metrics.net_tx
-        cpuSum += n.metrics.cpu
-        cpuCount++
-        memUsed += n.metrics.mem_used
-        memTotal += n.metrics.mem_total
       }
       dayRx += n.day_rx ?? 0
       dayTx += n.day_tx ?? 0
-      month += monthUsage(n)
-      if (n.traffic_limit > 0) quota += n.traffic_limit
+      month += (n.month_rx ?? 0) + (n.month_tx ?? 0)
+      total += (n.total_rx ?? 0) + (n.total_tx ?? 0)
     }
     return {
       online,
@@ -72,73 +64,59 @@ export function Summary({ nodes, scope, speed, currency, fx }: SummaryProps) {
       tx,
       dayRx,
       dayTx,
-      memUsed,
-      memTotal,
-      cpu: cpuCount ? cpuSum / cpuCount : null,
       month,
-      quota,
+      total,
       worst: busy(nodes),
     }
   }, [nodes])
-
-  const value = useMemo(() => remainingValue(nodes, currency, fx), [nodes, currency, fx])
 
   const rxSeries = speed.map((s) => s.rx)
   const txSeries = speed.map((s) => s.tx)
   // A site with no nodes, or none online yet, has no peak to report: the tile
   // says so rather than printing a rounded-up zero.
   const peak = Math.max(stats.rx, stats.tx, ...rxSeries, ...txSeries)
-  const memPct = stats.memTotal > 0 ? percent(stats.memUsed, stats.memTotal) : 0
-  const quotaPct = stats.quota > 0 ? percent(stats.month, stats.quota) : 0
 
   return (
     <div className="summary">
       <div className="tile">
         <div className="tile-label">
           <IconServer />
-          在线节点
+          {t("在线节点", "Online nodes")}
         </div>
         <div className="tile-value">
-          {stats.online}
+          <span>{stats.online}</span>
           <small> / {nodes.length}</small>
         </div>
-        <div className="tile-foot">
-          {!nodes.length
-            ? "还没有节点"
-            : `${scope}${nodes.length - stats.online > 0 ? ` · ${nodes.length - stats.online} 台离线` : " · 全部在线"}`}
-        </div>
+        <div className="tile-label tile-section-label"><IconServer />{t("离线节点", "Offline nodes")}</div>
+        <div className="tile-value"><span>{nodes.length - stats.online}</span><small> {t("台", "nodes")}</small></div>
+        <div className="tile-foot">{t("节点状态实时更新", "Node status updates live")}</div>
       </div>
 
       <div className="tile">
         <div className="tile-label">
           <IconActivity />
-          负载最高
+          {t("CPU 占用", "CPU usage")}
         </div>
         <div className="tile-value">
-          {stats.worst?.metrics ? `${Math.round(stats.worst.metrics.cpu)}%` : "—"}
+          {stats.worst?.metrics ? <><span>{Math.round(stats.worst.metrics.cpu)}</span><small>%</small></> : <span>—</span>}
         </div>
+        <div className="tile-label tile-section-label" title={t("CPU 占用最高节点最近 1 分钟的系统平均负载", "1-minute system load of the node with the highest CPU usage")}><IconGauge />{t("平均负载", "Average load")}</div>
+        <div className="tile-value">{stats.worst?.metrics ? stats.worst.metrics.load[0].toFixed(2) : "—"}</div>
         <div className="tile-foot">
           {stats.worst
-            ? `${stats.worst.name}${stats.worst.metrics ? ` · ${stats.worst.metrics.load[0].toFixed(2)} 负载` : ""}`
-            : "没有在线节点"}
+            ? stats.worst.name
+            : t("没有在线节点", "No online nodes")}
         </div>
       </div>
 
       <div className="tile">
         <div className="tile-label">
-          <IconArrows />
-          实时网速
+          <IconArrowDown />
+          {t("实时下行", "Download speed")}
         </div>
-        <div className="tile-value flow">
-          <span title="下行">
-            ↓ {rate(stats.rx)}
-            <em>下行</em>
-          </span>
-          <span title="上行">
-            ↑ {rate(stats.tx)}
-            <em>上行</em>
-          </span>
-        </div>
+        <div className="tile-value">{rate(stats.rx)}</div>
+        <div className="tile-label tile-section-label"><IconArrowUp />{t("实时上行", "Upload speed")}</div>
+        <div className="tile-value">{rate(stats.tx)}</div>
         <div className="tile-spark">
           <Sparkline points={rxSeries} color="var(--accent)" height={26} />
         </div>
@@ -146,135 +124,35 @@ export function Summary({ nodes, scope, speed, currency, fx }: SummaryProps) {
 
       <div className="tile">
         <div className="tile-label">
-          <IconArrows />
-          今日流量
+          <IconArrowDown />
+          {t("今日下载", "Downloaded today")}
         </div>
-        <div className="tile-value flow">
-          <span title="下行">
-            ↓ {bytes(stats.dayRx)}
-            <em>下行</em>
-          </span>
-          <span title="上行">
-            ↑ {bytes(stats.dayTx)}
-            <em>上行</em>
-          </span>
-        </div>
+        <div className="tile-value">{bytes(stats.dayRx)}</div>
+        <div className="tile-label tile-section-label"><IconArrowUp />{t("今日上传", "Uploaded today")}</div>
+        <div className="tile-value">{bytes(stats.dayTx)}</div>
         <div className="tile-foot">
           {peak > 0
-            ? `今日峰值 ${rate(peak)}`
+            ? `${t("今日峰值", "Peak today")} ${rate(peak)}`
             : stats.dayRx + stats.dayTx > 0
-              ? "节点离线，没有实时峰值"
-              : "还没有流量记录"}
+              ? t("节点离线，没有实时峰值", "Nodes offline; no live peak")
+              : t("还没有流量记录", "No traffic recorded yet")}
         </div>
       </div>
 
-      <div className="tile">
-        <div className="tile-label">
-          <IconWallet />
-          剩余价值
-        </div>
-        <div className="tile-value">{value.priced > 0 ? money(value.total, currency) : "—"}</div>
-        <div className="tile-foot">
-          {value.priced > 0
-            ? `${value.priced} 台在付费${value.unpriced > 0 ? ` · ${value.unpriced} 台缺汇率` : ""}`
-            : value.unpriced > 0
-              ? "缺少汇率，无法换算"
-              : value.expired > 0
-                ? "有价格的节点都已过期"
-                : "节点都没有填价格"}
-        </div>
-        <div className="tile-note">{rateNote(fx, currency)}</div>
-      </div>
-
-      <div className="tile">
+      <div className="tile tile-traffic">
         <div className="tile-label">
           <IconGauge />
-          本月流量
+          {t("本月流量", "Monthly traffic")}
         </div>
-        <div className="tile-value">
-          {stats.quota > 0 ? (
-            <>
-              {Math.round(quotaPct)}
-              <small>%</small>
-            </>
-          ) : (
-            bytes(stats.month)
-          )}
+        <div className="tile-value">{bytes(stats.month)}</div>
+        <div className="tile-label tile-section-label">
+          <IconArrows />
+          {t("累计流量", "Total traffic")}
         </div>
-        {stats.quota > 0 ? (
-          <div className="meter-bar tile-bar">
-            <i
-              className={quotaPct >= 90 ? "danger" : quotaPct >= 75 ? "warn" : ""}
-              style={{ width: `${Math.min(100, quotaPct)}%` }}
-            />
-          </div>
-        ) : null}
-        <div className="tile-foot">
-          {stats.quota > 0 ? `${bytes(stats.month)} / ${bytes(stats.quota)}` : "节点都没有设流量上限"}
-        </div>
+        <div className="tile-value">{bytes(stats.total)}</div>
+        <div className="tile-foot">{t("上传与下载合计", "Upload and download combined")}</div>
       </div>
 
-      <div className="tile">
-        <div className="tile-label">
-          <IconTag />
-          内存占用
-        </div>
-        <div className="tile-value">
-          {stats.memTotal > 0 ? (
-            <>
-              {Math.round(memPct)}
-              <small>%</small>
-            </>
-          ) : (
-            "—"
-          )}
-        </div>
-        {stats.memTotal > 0 ? (
-          <div className="meter-bar tile-bar">
-            <i className={memPct >= 90 ? "danger" : memPct >= 75 ? "warn" : ""} style={{ width: `${Math.min(100, memPct)}%` }} />
-          </div>
-        ) : null}
-        <div className="tile-foot">
-          {stats.memTotal > 0 ? `${bytes(stats.memUsed)} / ${bytes(stats.memTotal)}` : "没有在线节点"}
-        </div>
-        {stats.cpu !== null ? <div className="tile-note">CPU 平均 {Math.round(stats.cpu)}%</div> : null}
-      </div>
-
-      <div className="tile">
-        <div className="tile-label">
-          <IconClock />
-          到期提醒
-        </div>
-        <div className="tile-value">
-          {value.soon > 0 ? (
-            <>
-              {value.soon}
-              <small> 台</small>
-            </>
-          ) : value.next !== null ? (
-            <>
-              {value.next}
-              <small> 天</small>
-            </>
-          ) : value.expired > 0 ? (
-            <>
-              {value.expired}
-              <small> 台</small>
-            </>
-          ) : (
-            "—"
-          )}
-        </div>
-        <div className="tile-foot">
-          {value.expired > 0
-            ? `${value.expired} 台已过期${value.soon > 0 ? ` · ${value.soon} 台一周内到期` : ""}`
-            : value.soon > 0
-              ? "一周内到期"
-              : value.next !== null
-                ? `最近一台 ${value.next} 天后到期`
-                : "都没有到期日"}
-        </div>
-      </div>
     </div>
   )
 }

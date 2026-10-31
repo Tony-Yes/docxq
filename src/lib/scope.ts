@@ -1,8 +1,9 @@
+import { t } from "@/lib/i18n"
 import type { Node } from "@/lib/api"
 
 /**
  * What the page is showing. A group is operator-written text and could be
- * called "全部节点" or "离线" as easily as anything else, so the two virtual
+ * called t("全部节点", "All nodes") or t("离线", "Offline") as easily as anything else, so the two virtual
  * scopes are their own cases instead of magic strings sharing that space.
  */
 export type Scope =
@@ -31,11 +32,11 @@ export function inScope(node: Node, scope: Scope): boolean {
 export function scopeLabel(scope: Scope): string {
   switch (scope.kind) {
     case "all":
-      return "全部节点"
+      return t("全部节点", "All nodes")
     case "online":
-      return "全部在线"
+      return t("全部在线", "All online")
     case "offline":
-      return "离线"
+      return t("离线", "Offline")
     case "group":
       return scope.name
   }

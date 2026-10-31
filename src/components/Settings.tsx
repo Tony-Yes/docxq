@@ -1,7 +1,27 @@
+import { t } from "@/lib/i18n"
 import { useEffect, useRef, useState } from "react"
 
 import { entries, fields, saveConfig, type Values } from "@/lib/config"
 import { IconClose } from "@/components/icons"
+
+const labels: Record<string, string> = {
+  "首页": "Home", "节点卡片": "Node cards", "外观": "Appearance", "剩余价值": "Remaining value", "关于本站": "About this site",
+  notice: "Announcement", quote: "Daily quotes", quote_api: "Quote API", show_summary: "Show summary", sidebar: "Show sidebar", footer: "Footer text",
+  layout: "Node layout", show_usage: "Show resource usage", show_price: "Show price and expiry", show_remark: "Show public remarks", columns: "Maximum card columns",
+  accent: "Accent color", dark: "Color scheme", currency: "Currency", fx_rates: "Manual exchange rates", about_title: "About title", about: "About content",
+  panel: "Single panel", cards: "Card grid", blue: "Blue", green: "Green", orange: "Orange", violet: "Violet", auto: "System", light: "Light", dark_mode: "Dark",
+  CNY: "Chinese yuan CNY", USD: "US dollar USD", HKD: "Hong Kong dollar HKD", EUR: "Euro EUR", JPY: "Japanese yen JPY",
+}
+const help: Record<string, string> = {
+  notice: "Plain text shown at the top of the home page; leave blank to hide.",
+  quote: "One quote per line; optionally separate author with —. Leave blank for built-in quotes.",
+  quote_api: "A JSON (hitokoto-compatible) or plain-text endpoint, fetched once per day. Falls back to local quotes on failure.",
+  show_summary: "Show the five summary cards above the node list.", footer: "Footer text; leave blank to hide.",
+  layout: "Display nodes in one panel or in individual cards.", show_price: "Nodes without a price show Free; no expiry date shows Unlimited.",
+  columns: "Only applies to the card grid. Narrow windows automatically use fewer columns.", dark: "Visitors can override the color scheme using the header button.",
+  currency: "Currency used for value calculations.", fx_rates: "Fallback rates, expressed as 1 unit of currency in CNY, e.g. USD=7.2, HKD=0.92.",
+  about_title: "Heading used in the sidebar and About section.", about: "Markdown is supported. Leave blank to show the built-in description.",
+}
 
 /**
  * The panel the hub shows the operator. It draws itself from theme.json's config
@@ -36,11 +56,11 @@ export function Settings({ values, onClose, onSaved }: { values: Values; onClose
       onSaved(draft)
       // The write is visible in the page behind the drawer at once; the panel
       // stays just long enough to say so before it gets out of the way.
-      setMessage({ kind: "ok", text: "已保存" })
+      setMessage({ kind: "ok", text: t("已保存", "Saved") })
       closing.current = window.setTimeout(onClose, 900)
     } catch (e) {
       // The hub answers a refused write with one line of Chinese text.
-      setMessage({ kind: "bad", text: (e as Error).message || "保存失败" })
+      setMessage({ kind: "bad", text: (e as Error).message || t("保存失败", "Save failed") })
     } finally {
       setBusy(false)
     }
@@ -49,10 +69,10 @@ export function Settings({ values, onClose, onSaved }: { values: Values; onClose
   return (
     <>
       <div className="scrim" onClick={onClose} />
-      <aside className="drawer" role="dialog" aria-modal="true" aria-label="主题设置">
+      <aside className="drawer" role="dialog" aria-modal="true" aria-label={t("主题设置", "Theme settings")}>
         <div className="drawer-head">
-          <h2>主题设置</h2>
-          <button className="icon-btn close" onClick={onClose} aria-label="关闭">
+          <h2>{t("主题设置", "Theme settings")}</h2>
+          <button className="icon-btn close" onClick={onClose} aria-label={t("关闭", "Close")}>
             <IconClose />
           </button>
         </div>
@@ -61,24 +81,24 @@ export function Settings({ values, onClose, onSaved }: { values: Values; onClose
           {entries.map((entry, i) =>
             entry.type === "title" ? (
               <div className="field-group" key={`t-${i}`}>
-                {entry.label}
+                {t(entry.label, labels[entry.label] ?? entry.label)}
               </div>
             ) : (
               <Field key={entry.key} field={entry} value={draft[entry.key]} onChange={(v) => set(entry.key, v)} />
             ),
           )}
           <p className="field-help" style={{ marginTop: 20 }}>
-            这些设置保存在站点里，所有访客都会看到。共 {fields.length} 项。
+            {t(`这些设置保存在站点里，所有访客都会看到。共 ${fields.length} 项。`, `These ${fields.length} settings apply to all visitors.`)}
           </p>
         </div>
 
         <div className="drawer-foot">
           <span className={`msg ${message?.kind ?? ""}`}>{message?.text ?? ""}</span>
           <button className="btn" onClick={onClose} disabled={busy}>
-            取消
+            {t("取消", "Cancel")}
           </button>
           <button className="btn primary" onClick={save} disabled={busy}>
-            {busy ? "保存中…" : "保存"}
+            {busy ? t("保存中…", "Saving…") : t("保存", "Save")}
           </button>
         </div>
       </aside>
@@ -95,7 +115,8 @@ function Field({
   value: unknown
   onChange: (v: unknown) => void
 }) {
-  const label = field.label ?? field.key
+  const label = t(field.label ?? field.key, labels[field.key] ?? field.key)
+  const fieldHelp = t(field.help ?? "", help[field.key] ?? "")
 
   if (field.type === "boolean") {
     return (
@@ -105,7 +126,7 @@ function Field({
           <span className="track" />
           <span>{label}</span>
         </label>
-        {field.help ? <div className="field-help">{field.help}</div> : null}
+        {fieldHelp ? <div className="field-help">{fieldHelp}</div> : null}
       </div>
     )
   }
@@ -119,11 +140,11 @@ function Field({
         <select className="select" id={`f-${field.key}`} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)}>
           {field.options?.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label ?? o.value}
+              {t(o.label ?? o.value, labels[o.value === "dark" ? "dark_mode" : o.value] ?? o.label ?? o.value)}
             </option>
           ))}
         </select>
-        {field.help ? <div className="field-help">{field.help}</div> : null}
+        {fieldHelp ? <div className="field-help">{fieldHelp}</div> : null}
       </div>
     )
   }
@@ -146,7 +167,7 @@ function Field({
             if (Number.isFinite(next)) onChange(next)
           }}
         />
-        {field.help ? <div className="field-help">{field.help}</div> : null}
+        {fieldHelp ? <div className="field-help">{fieldHelp}</div> : null}
       </div>
     )
   }
@@ -163,7 +184,7 @@ function Field({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.target.value)}
         />
-        {field.help ? <div className="field-help">{field.help}</div> : null}
+        {fieldHelp ? <div className="field-help">{fieldHelp}</div> : null}
       </div>
     )
   }
@@ -179,7 +200,7 @@ function Field({
         value={typeof value === "string" ? value : ""}
         onChange={(e) => onChange(e.target.value)}
       />
-      {field.help ? <div className="field-help">{field.help}</div> : null}
+      {fieldHelp ? <div className="field-help">{fieldHelp}</div> : null}
     </div>
   )
 }
