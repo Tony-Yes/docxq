@@ -3,7 +3,7 @@
   "short": "doc",
   "description": "文档风格的状态页：三栏排版、侧边目录、单张大卡片装下整组节点",
   "version": "1.0.2",
-  "author": "bluesmkun",
+  "author": "Tony-Yes（基于 bluesmkun 原作修改）",
   "url": "https://github.com/Tony-Yes/docxq",
   "config": [
     {

@@ -93,7 +93,7 @@ function Header({
 
         <div className="header-spacer" />
 
-        <button type="button" className="btn language-toggle" onClick={() => setLanguage(getLanguage() === "en" ? "zh-CN" : "en")} aria-label={t("切换到英文", "Switch to Chinese")} title={t("切换到英文", "Switch to Chinese")}>
+        <button type="button" className="icon-btn language-toggle" onClick={() => setLanguage(getLanguage() === "en" ? "zh-CN" : "en")} aria-label={t("切换到英文", "Switch to Chinese")} title={t("切换到英文", "Switch to Chinese")}>
           {getLanguage() === "en" ? "ZH" : "EN"}
         </button>
 

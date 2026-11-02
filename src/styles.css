@@ -661,14 +661,17 @@ h3.sub-title {
   grid-template-rows: 16px 29px 22px 28px;
   grid-auto-rows: min-content;
   align-content: start;
+  text-align: center;
 }
 .summary > .tile > .tile-label {
+  justify-content: center;
   align-self: start;
   min-height: 16px;
   line-height: 16px;
 }
 .summary > .tile > .tile-value {
   display: flex;
+  justify-content: center;
   align-items: baseline;
   align-self: start;
   margin-top: 3px;
@@ -711,6 +714,9 @@ h3.sub-title {
 }
 .summary > .tile > .tile-spark {
   height: 16px;
+}
+.summary > .tile-traffic-mobile {
+  display: none;
 }
 .tile-value {
   margin-top: 6px;
@@ -878,7 +884,8 @@ h3.sub-title {
    rates: whether the three of them fit depends on how wide the numbers are at
    that moment, so sharing the row made the block jump up and down as traffic
    changed. Reserving the line box also keeps rows the same height. */
-.panel-status .uptime {
+.panel-status .uptime,
+.panel-status .monthly-traffic {
   flex: 1 0 100%;
   line-height: 1.5;
   min-height: 1.5em;
@@ -1305,14 +1312,10 @@ h3.sub-title {
   outline-offset: 1px;
 }
 
-.btn.language-toggle {
-  flex: 0 0 44px;
-  width: 44px;
-  min-width: 44px;
-  height: 34px;
-  padding: 4px 8px;
-  justify-content: center;
-  font-size: 16px;
+.icon-btn.language-toggle {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   line-height: 1;
   touch-action: manipulation;
 }
@@ -2096,27 +2099,11 @@ html[lang="en"] .tile-foot {
     line-height: 15px;
   }
   .summary > .tile-traffic {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: none;
+  }
+  .summary > .tile-traffic-mobile {
+    display: grid;
     grid-template-rows: 16px 29px auto;
-    column-gap: 16px;
-  }
-  .summary > .tile-traffic > .tile-label:first-child {
-    grid-area: 1 / 1;
-  }
-  .summary > .tile-traffic > .tile-value:nth-child(2) {
-    grid-area: 2 / 1;
-  }
-  .summary > .tile-traffic > .tile-section-label {
-    grid-area: 1 / 2;
-    margin-top: 0;
-  }
-  .summary > .tile-traffic > .tile-value:nth-child(4) {
-    grid-area: 2 / 2;
-    margin-top: 3px;
-  }
-  .summary > .tile-traffic > .tile-foot {
-    grid-column: 1 / -1;
   }
   /* The search field's content size is a full placeholder, and on a phone that
      leaves the site name three characters wide. The brand keeps its width and

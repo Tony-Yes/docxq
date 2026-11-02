@@ -111,12 +111,12 @@ export function Summary({ nodes, speed }: SummaryProps) {
 
       <div className="tile">
         <div className="tile-label">
-          <IconArrowDown />
-          {t("实时下行", "Download speed")}
+          <IconArrowUp />
+          {t("实时上行", "Upload speed")}
         </div>
-        <div className="tile-value">{rate(stats.rx)}</div>
-        <div className="tile-label tile-section-label"><IconArrowUp />{t("实时上行", "Upload speed")}</div>
         <div className="tile-value">{rate(stats.tx)}</div>
+        <div className="tile-label tile-section-label"><IconArrowDown />{t("实时下行", "Download speed")}</div>
+        <div className="tile-value">{rate(stats.rx)}</div>
         <div className="tile-spark">
           <Sparkline points={rxSeries} color="var(--accent)" height={26} />
         </div>
@@ -124,12 +124,12 @@ export function Summary({ nodes, speed }: SummaryProps) {
 
       <div className="tile">
         <div className="tile-label">
-          <IconArrowDown />
-          {t("今日下载", "Downloaded today")}
+          <IconArrowUp />
+          {t("今日上传", "Uploaded today")}
         </div>
-        <div className="tile-value">{bytes(stats.dayRx)}</div>
-        <div className="tile-label tile-section-label"><IconArrowUp />{t("今日上传", "Uploaded today")}</div>
         <div className="tile-value">{bytes(stats.dayTx)}</div>
+        <div className="tile-label tile-section-label"><IconArrowDown />{t("今日下载", "Downloaded today")}</div>
+        <div className="tile-value">{bytes(stats.dayRx)}</div>
         <div className="tile-foot">
           {peak > 0
             ? `${t("今日峰值", "Peak today")} ${rate(peak)}`
@@ -149,6 +149,17 @@ export function Summary({ nodes, speed }: SummaryProps) {
           <IconArrows />
           {t("累计流量", "Total traffic")}
         </div>
+        <div className="tile-value">{bytes(stats.total)}</div>
+        <div className="tile-foot">{t("上传与下载合计", "Upload and download combined")}</div>
+      </div>
+
+      <div className="tile tile-traffic-mobile">
+        <div className="tile-label"><IconGauge />{t("本月流量", "Monthly traffic")}</div>
+        <div className="tile-value">{bytes(stats.month)}</div>
+        <div className="tile-foot">{t("上传与下载合计", "Upload and download combined")}</div>
+      </div>
+      <div className="tile tile-traffic-mobile">
+        <div className="tile-label"><IconArrows />{t("累计流量", "Total traffic")}</div>
         <div className="tile-value">{bytes(stats.total)}</div>
         <div className="tile-foot">{t("上传与下载合计", "Upload and download combined")}</div>
       </div>

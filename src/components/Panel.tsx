@@ -79,16 +79,19 @@ const Row = memo(function Row({
           <Status node={node} />
           {m ? (
             <>
-              <span className="io" title={t("下行", "Download")}>
-                <IconArrowDown width={12} height={12} />
-                {rate(m.net_rx)}
-              </span>
               <span className="io" title={t("上行", "Upload")}>
                 <IconArrowUp width={12} height={12} />
                 {rate(m.net_tx)}
               </span>
+              <span className="io" title={t("下行", "Download")}>
+                <IconArrowDown width={12} height={12} />
+                {rate(m.net_rx)}
+              </span>
             </>
           ) : null}
+          <span className="io monthly-traffic">
+            {t("本月流量", "Monthly traffic")} {bytes((node.month_rx ?? 0) + (node.month_tx ?? 0))}
+          </span>
           {/* Its own line, always: sitting beside the rates, this line fits or
               does not fit depending on how wide the numbers happen to be that
               second, and the whole block jumps up and down as traffic changes. */}

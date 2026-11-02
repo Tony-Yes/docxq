@@ -102,13 +102,13 @@ export const NodeCard = memo(function NodeCard({ node, columns, usage, price, re
       <div className="card-foot">
         {m ? (
           <>
-            <span className="io" title={t("下行", "Download")}>
-              <IconArrowDown />
-              {rate(m.net_rx)}
-            </span>
             <span className="io" title={t("上行", "Upload")}>
               <IconArrowUp />
               {rate(m.net_tx)}
+            </span>
+            <span className="io" title={t("下行", "Download")}>
+              <IconArrowDown />
+              {rate(m.net_rx)}
             </span>
           </>
         ) : (
